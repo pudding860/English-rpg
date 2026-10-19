@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speaking Matrix RPG - 米国発音記号＆リンキング完全対応版</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .blur-text {
+      filter: blur(8px);
+      user-select: none;
+      transition: filter 0.2s ease;
+    }
+    .blur-text:hover {
+      filter: blur(0px);
+    }
+    .pulse-recording {
+      animation: pulse-red 1.5s infinite;
+    }
+    .pulse-speaking {
+      animation: pulse-cyan 1.5s infinite;
+    }
+    @keyframes pulse-red {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @keyframes pulse-cyan {
+      0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(6, 182, 212, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+    }
+    .word-highlight {
+      background-color: rgba(250, 204, 21, 0.35);
+      color: #fef08a;
+      border-radius: 4px;
+      padding: 0 2px;
+      transition: all 0.1s ease;
+    }
+    .ipa-font {
+      font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-16">
+
+  <!-- Header & RPG Status Dashboard -->
+  <header class="bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3.5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="bg-indigo-600 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Speaking RPG 完全版</span>
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">北米進捗会議 120構文＆米国発音トレーナー</h1>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">弱化・リンキング発音記号（IPA）搭載・一括追加・自己録音・秒数計測</p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="openComboModal()" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-solid fa-bolt"></i>
+            <span>コンボ練習</span>
+          </button>
+          <button onclick="toggleBlindMode()" id="blindBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+            <i class="fa-regular fa-eye-slash"></i>
+            <span>英文を隠す</span>
+          </button>
+          <button onclick="openBulkModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-file-import"></i>
+            <span>一括追加 / 保存</span>
+          </button>
+          <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-lg shadow-indigo-600/20 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i>
+            <span>1件追加</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- US Native Audio & Mic Settings Bar -->
+      <div class="mt-3 bg-slate-800/90 border border-cyan-500/30 rounded-xl p-2 px-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2.5 w-full sm:w-auto">
+          <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 text-sm">🇺🇸</span>
+          <div class="flex-1 sm:flex-initial">
+            <label class="text-[10px] text-cyan-300 font-bold block">お手本ボイス (アメリカ英語ネイティブ優先)</label>
+            <select id="voiceSelect" onchange="saveVoicePreference()" class="bg-slate-900 border border-slate-700 text-xs text-white rounded px-2 py-1 mt-0.5 w-full sm:w-60 focus:outline-none focus:border-cyan-500">
+              <option value="">音声を読み込み中...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-700/70">
+          <label class="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" id="recordToggle" checked class="accent-rose-500 rounded">
+            <span>🎙️ 計測時に自分の声を自動録音</span>
+          </label>
+
+          <div class="flex items-center gap-1">
+            <span class="text-xs text-slate-400">速度:</span>
+            <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+              <button onclick="setSpeechRate(0.8)" id="rate-0.8" class="px-2 py-0.5 text-[11px] rounded font-bold text-slate-400 hover:text-white transition">0.8x</button>
+              <button onclick="setSpeechRate(1.0)" id="rate-1" class="px-2 py-0.5 text-[11px] rounded font-bold bg-cyan-600 text-white transition">1.0x</button>
+              <button onclick="setSpeechRate(1.15)" id="rate-1.15" class="px-2 py-0.5 text-[11px] rounded font-bold text-slate-400 hover:text-white transition">1.15x</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-2.5">
+        <div class="bg-slate-800/80 border border-slate-700/70 rounded-xl p-2.5 flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 font-extrabold text-base" id="playerLv">Lv.1</div>
+          <div>
+            <div class="text-[10px] text-slate-400">現在の称号</div>
+            <div class="text-xs sm:text-sm font-bold text-amber-300" id="playerTitle">見習い交渉人</div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/70 rounded-xl p-2.5">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-400 text-[11px]">引き出し習得率</span>
+            <span class="font-bold text-emerald-400 text-xs" id="progressText">0 / 20 (0%)</span>
+          </div>
+          <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500" id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/70 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-slate-400">総アウトプット回数</div>
+            <div class="text-base font-extrabold text-white"><span id="totalReps">0</span> <span class="text-xs font-normal text-slate-400">回</span></div>
+          </div>
+          <i class="fa-solid fa-fire text-orange-500 text-xl opacity-80"></i>
+        </div>
+
+        <div class="bg-slate-800/80 border border-slate-700/70 rounded-xl p-2.5 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] text-slate-400">平均ベストタイム</div>
+            <div class="text-base font-extrabold text-cyan-400"><span id="avgBestTime">--</span> <span class="text-xs font-normal text-slate-400">秒</span></div>
+          </div>
+          <i class="fa-solid fa-stopwatch text-cyan-500 text-xl opacity-80"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto px-4 mt-5">
+    <!-- IPA Legend Banner -->
+    <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-2.5 px-3.5 mb-4 text-[11px] text-slate-300 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <span class="font-bold text-cyan-300"><i class="fa-solid fa-ear-listen mr-1"></i>米国発音記号ガイド:</span>
+      <span><strong class="text-amber-300">‿</strong> = リンキング(連結)</span>
+      <span><strong class="text-amber-300">ə</strong> = 弱化(力を抜く曖昧母音)</span>
+      <span><strong class="text-amber-300">ɾ</strong> = フラップT(ラ行/ダ行に近い弾き音)</span>
+      <span><strong class="text-amber-300">(t)/(d)</strong> = 飲み込む音(無開放・脱落)</span>
+    </div>
+
+    <!-- Dynamic Category & Status Filters -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div id="categoryTabs" class="flex flex-wrap gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700"></div>
+
+      <div class="flex gap-1.5 bg-slate-800/80 p-1 rounded-lg border border-slate-700 self-start">
+        <button onclick="setFilter('all')" id="tab-all" class="px-2.5 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition">すべて</button>
+        <button onclick="setFilter('unmastered')" id="tab-unmastered" class="px-2.5 py-1 rounded text-xs font-bold text-slate-300 hover:text-white transition">未習得</button>
+        <button onclick="setFilter('mastered')" id="tab-mastered" class="px-2.5 py-1 rounded text-xs font-bold text-slate-300 hover:text-white transition">習得済み ✅</button>
+      </div>
+    </div>
+
+    <!-- Phrase Cards List -->
+    <div id="cardsContainer" class="space-y-4"></div>
+  </main>
+
+  <!-- Bulk Import / Export Modal -->
+  <div id="bulkModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-import text-emerald-400"></i> 構文の一括追加 ＆ バックアップ保存
+        </h2>
+        <button onclick="closeBulkModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-3.5 text-xs text-slate-300 space-y-1">
+        <p class="font-bold text-emerald-300">✨ 発音記号（IPA）付きデータの一括インポートに対応！</p>
+        <p>チャットで作成された「一括追加用JSONデータ」を下の枠に貼り付けて「一括インポート実行」を押すだけで、発音記号も含めてワンクリックで追加されます。</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 mb-1">一括追加用データ (JSON形式) をここに貼り付け:</label>
+        <textarea id="bulkJsonInput" rows="6" placeholder='[{"category":"🌱 初級編 11〜20", "situation":"...", "english":"...", "ipa":"/...", "pronNote":"...", "japanese":"...", "sourceRef":"...", "targetSec":4.0, "note":"..."}]' class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs font-mono text-emerald-300 focus:outline-none focus:border-emerald-500"></textarea>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <button onclick="exportBackup()" class="px-3 py-2 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> 全データをファイル保存
+        </button>
+        <div class="flex gap-2">
+          <button onclick="closeBulkModal()" class="px-4 py-2 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">閉じる</button>
+          <button onclick="importBulkJson()" class="px-5 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500">一括インポート実行</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combo Practice Modal -->
+  <div id="comboModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+          <i class="fa-solid fa-bolt"></i> 引き出し×2 コンボ練習モード
+        </h2>
+        <button onclick="closeComboModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-300">2つの引き出しを素早く開けて組み合わせる練習です。発音記号のリンキングも意識して連続で声に出してみましょう！</p>
+      <div id="comboContent" class="space-y-3"></div>
+      <div class="flex justify-between items-center pt-2">
+        <button onclick="generateCombo()" class="px-4 py-2 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1.5">
+          <i class="fa-solid fa-shuffle"></i> 別の組み合わせを引く
+        </button>
+        <button onclick="closeComboModal()" class="px-4 py-2 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single Add Phrase Modal -->
+  <div id="addModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-indigo-400"></i> 新しい会議フレーズを1件追加
+        </h2>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <form id="addForm" onsubmit="addNewPhrase(event)" class="space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">章・カテゴリー名 *</label>
+            <input type="text" id="inputCategory" required value="🌱 初級編 01〜10" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">用途タイトル *</label>
+            <input type="text" id="inputSituation" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">英語フレーズ *</label>
+          <textarea id="inputEnglish" required rows="2" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-cyan-300 mb-1">アメリカ英語 発音記号 (IPA・任意)</label>
+          <input type="text" id="inputIpa" placeholder="例: /ɪts‿ɪmˈpɔːrtṇ(t) tə .../" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-cyan-200 ipa-font focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-cyan-300 mb-1">弱化・リンキング解説 (任意)</label>
+          <input type="text" id="inputPronNote" placeholder="例: that you ➔ /ðətʃu/（ザッチュ）と同化" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">日本語訳 *</label>
+          <input type="text" id="inputJapanese" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-300 mb-1">元資料のセクション・番号・構文名 *</label>
+            <input type="text" id="inputSource" required class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">目標秒数 (秒)</label>
+            <input type="number" step="0.5" id="inputTargetSec" value="4.0" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">ワンポイントメモ (任意)</label>
+          <input type="text" id="inputNote" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg text-sm font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">キャンセル</button>
+          <button type="submit" class="px-5 py-2 rounded-lg text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-500">追加する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const builtInPhrases = [
+      // 🌱 初級編 01〜10
+      {
+        id: 101,
+        category: "🌱 初級編 01〜10",
+        situation: "01. 優先事項・重要性の共有",
+        english: "It's important to finalize the compliance matrix this week.",
+        ipa: "/ɪts‿ɪmˈpɔːrtṇ(t) tə ˈfaɪnəlaɪz ðə kəmˈplaɪəns ˈmeɪtrɪks ðɪs ˈwiːk/",
+        pronNote: "It's‿importantが連結。importantの語末/t/は鼻に抜け、直後のtoは/tə/に弱化。",
+        japanese: "今週中にコンプライアンスマトリックスを最終決定することは重要です。",
+        sourceRef: "重要構文 30選 初級編 / 01「It's 形容詞 to do (~するのは形容詞だ)」",
+        note: "基礎の引き出し「It's important to do」で会議のゴールを明確にする。",
+        targetSec: 3.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 102,
+        category: "🌱 初級編 01〜10",
+        situation: "02. 北米担当者の交渉スピードへの称賛",
+        english: "It's impressive that you got the customer's feedback so quickly.",
+        ipa: "/ɪts‿ɪmˈprɛsɪv ðətʃu ˈɡɑː(t) ðə ˈkʌstəmərz ˈfiːdbæk ˈsoʊ ˈkwɪkli/",
+        pronNote: "that youは弱化＋同化で /ðətʃu/（ザッチュ）。got theの/t/は破裂させず止める。",
+        japanese: "そんなに早く顧客のフィードバックを入手してくれたなんてすごいですね。",
+        sourceRef: "重要構文 30選 初級編 / 02「It's 形容詞 that 文 (文は形容詞だ)」",
+        note: "例文の「It's impressive that... so quickly」をリサイクルして感謝を伝える。",
+        targetSec: 4.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 103,
+        category: "🌱 初級編 01〜10",
+        situation: "03. 対応不可（できないこと）の理由説明①",
+        english: "This requirement is so strict that we can't meet it.",
+        ipa: "/ðɪs rɪˈkwaɪərmən(t)‿ɪz ˈsoʊ ˈstrɪk(t) ðə(t) wi ˈkæn(t) ˈmiːɾ‿ɪt/",
+        pronNote: "requirement‿isの/t/が脱落し連結。meet‿itはフラップTで /ˈmiːɾ‿ɪt/（ミーディッ）。",
+        japanese: "この要求事項はとても厳しいので、私たちは対応することができません。",
+        sourceRef: "重要構文 30選 初級編 / 03「X is so 形容詞 that 文 (Xはとても形容詞だから文だ)」",
+        note: "マトリックス上のNG項目について、対応できない理由を端的に伝える。",
+        targetSec: 3.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 104,
+        category: "🌱 初級編 01〜10",
+        situation: "04. 対応不可の理由説明②（期限・テスト）",
+        english: "The deadline is too tight to test the blower motor controller.",
+        ipa: "/ðə ˈdɛdlaɪn‿ɪz ˈtuː ˈtaɪ(t) tə ˈtɛs(t) ðə ˈbloʊər ˈmoʊɾər kənˈtroʊlər/",
+        pronNote: "tight toは/t/が重なり /ˈtaɪ(t) tə/。motorは米音フラップTで /ˈmoʊɾər/（モウラー）。",
+        japanese: "期限が厳しすぎて、ブロアモーターコントローラーのテストができません。",
+        sourceRef: "重要構文 30選 初級編 / 04「X is too 形容詞 to do (Xは形容詞すぎて〜できない)」",
+        note: "03の構文と同じ「できない理由」の引き出しとしてセットでストック。",
+        targetSec: 4.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 105,
+        category: "🌱 初級編 01〜10",
+        situation: "05. 対応可能（できること）の根拠の主張",
+        english: "Our current design is good enough to meet their specifications.",
+        ipa: "/ɑːr ˈkɜːrən(t) dɪˈzaɪn‿ɪz ˈɡʊɾ‿ɪˈnʌf tə ˈmiː(t) ðɛr ˌspɛsəfəˈkeɪʃənz/",
+        pronNote: "Ourは弱化して /ɑːr/（アー）。good‿enoughはフラップ連結で /ˈɡʊɾ‿ɪˈnʌf/（グディナフ）。",
+        japanese: "私たちの現在の設計は、彼らの仕様を満たすのに十分優れています。",
+        sourceRef: "重要構文 30選 初級編 / 05「X is 形容詞 enough to do (~するにはXは十分形容詞だ)」",
+        note: "設計変更なしで顧客仕様をクリアできることを自信を持って伝える。",
+        targetSec: 4.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 106,
+        category: "🌱 初級編 01〜10",
+        situation: "06. 難色を示す・判断の難しさを伝える",
+        english: "I find it very difficult to accept this new requirement.",
+        ipa: "/aɪ ˈfaɪnd‿ɪ(t) ˈvɛri ˈdɪfɪkəl(t) tu‿əkˈsɛp(t) ðɪs ˈnuː rɪˈkwaɪərmənt/",
+        pronNote: "find‿itが連結し /ˈfaɪnd‿ɪ(t)/。difficult to‿acceptが滑らかに連結。newは米音 /nuː/。",
+        japanese: "この新しい要求事項を受け入れるのは、すごく難しいと思います。",
+        sourceRef: "重要構文 30選 初級編 / 06「find it 形容詞 to do (~することは形容詞だと思う)」",
+        note: "検討した結果「厳しい」と感じている自分の気持ちを乗せやすい構文。",
+        targetSec: 3.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 107,
+        category: "🌱 初級編 01〜10",
+        situation: "07. 仕様書の入手依頼と目的の提示",
+        english: "Please send us the latest specs so that we can update the matrix.",
+        ipa: "/ˈpliːz ˈsɛnd‿əs ðə ˈleɪɾəs(t) ˈspɛks ˈsoʊ ðə(t) wi kən‿ʌpˈdeɪ(t) ðə ˈmeɪtrɪks/",
+        pronNote: "send‿usは /ˈsɛnd‿əs/。canは弱形 /kən/ になり update と /kən‿ʌpˈdeɪ(t)/ と連結。",
+        japanese: "マトリックスを更新できるように、最新の仕様書を送ってください。",
+        sourceRef: "重要構文 30選 初級編 / 07「文 so that 文 (文のために文する)」",
+        note: "依頼の後に目的（so that we can...）を繋げて相手に動いてもらいやすくする。",
+        targetSec: 4.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 108,
+        category: "🌱 初級編 01〜10",
+        situation: "08. 問題ないことの強調（全面OKの回答）",
+        english: "That's not a problem at all on our end.",
+        ipa: "/ðæts ˈnɑːɾ‿ə ˈprɑːbləm‿əˈɾɔːl‿ɑːn‿ɑːr‿ˈɛnd/",
+        pronNote: "not‿aが /ˈnɑːɾ‿ə/（ナラ）、at‿allが /əˈɾɔːl/（アロー）、on‿our‿endまで一息で連結。",
+        japanese: "こちら側としては、それは全く問題ありません。",
+        sourceRef: "重要構文 30選 初級編 / 08「否定文 + at all (全く+否定文)」",
+        note: "北米担当者からの確認に対して「そこは完全に対応可能！」と安心させる一言。",
+        targetSec: 3.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 109,
+        category: "🌱 初級編 01〜10",
+        situation: "09. 従来仕様との同一性の確認",
+        english: "This specification is the same as the previous model, right?",
+        ipa: "/ðɪs ˌspɛsəfəˈkeɪʃən‿ɪz ðə ˈseɪm‿əz ðə ˈpriːviəs ˈmɑːdəl | ˈraɪt/",
+        pronNote: "Thisとspecificationの/s/が重なり、same‿asはasが弱化して /ˈseɪm‿əz/（セイマズ）。",
+        japanese: "この仕様は前のモデルと同じですよね？",
+        sourceRef: "重要構文 30選 初級編 / 09「X is the same as Y (XはYと同じだ。)」",
+        note: "例文の「... is the same as ..., right?」のリズムをそのまま仕様確認に活用。",
+        targetSec: 3.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 110,
+        category: "🌱 初級編 01〜10",
+        situation: "10. 交渉での誤解・早合点を防ぐ釘刺し",
+        english: "Just because we are reviewing it doesn't mean we can do it.",
+        ipa: "/ˈdʒʌs(t) bɪˈkɔːz wɪr rɪˈvjuːɪŋ‿ɪ(t) ˈdʌzən(t) ˈmiːn wi kən ˈduː‿ɪt/",
+        pronNote: "Justの/t/は脱落。we areは /wɪr/ に弱化。can do‿itは /kən ˈduː‿ɪt/。",
+        japanese: "私たちがそれを検討しているからといって、対応できるとは限りません。",
+        sourceRef: "重要構文 30選 初級編 / 10「Just because 文 doesn't mean 文」",
+        note: "「検討中＝合意」と顧客に早合点されないよう、線引きを明確にする重要構文。",
+        targetSec: 4.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+
+      // 🚀 実践会議セレクト
+      {
+        id: 1,
+        category: "🚀 実践会議セレクト",
+        situation: "仕様書の入手依頼（丁寧）",
+        english: "If you could share the latest customer specifications for the blower motor controller, that would be great.",
+        ipa: "/ɪf‿jə kəd ˈʃɛr ðə ˈleɪɾəs(t) ˈkʌstəmər ˌspɛsəfəˈkeɪʃənz fər ðə ˈbloʊər ˈmoʊɾər kənˈtroʊlər | ˈðæ(t) wʊ(d) bi ˈɡreɪt/",
+        pronNote: "If you couldは弱化して /ɪf‿jə kəd/。for theは /fər ðə/。that would beは語末子音を止めて連結。",
+        japanese: "ブロアモーターコントローラーの最新の顧客仕様書を共有していただけると、大変助かります。",
+        sourceRef: "重要構文 30選 中・上級編 / 02「If you could do, that would be 形容詞」",
+        note: "相手に配慮しながら丁寧に依頼する鉄板表現。",
+        targetSec: 5.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 2,
+        category: "🚀 実践会議セレクト",
+        situation: "自側の状況共有と進捗確認",
+        english: "We're in the process of updating our capabilities, but how is the negotiation with the customer going on your end?",
+        ipa: "/wɪr‿ɪn ðə ˈprɑːsɛs‿əv‿ʌpˈdeɪɾɪŋ‿ɑːr ˌkeɪpəˈbɪləɾiz | bə(t) ˈhaʊz ðə nɪˌɡoʊʃiˈeɪʃən wɪ(θ) ðə ˈkʌstəmər ˈɡoʊɪŋ‿ɑːn jər‿ˈɛnd/",
+        pronNote: "process‿of‿updatingが連結。updatingとcapabilitiesのtはフラップ化。your‿endは /jər‿ˈɛnd/。",
+        japanese: "現在、私たちの対応可否をアップデートしている過程にありますが、そちらでの顧客との交渉の進捗はどうですか？",
+        sourceRef: "ATSU がよく使う表現 20選 Part 3 / 2「in the process of (~の過程にある)」",
+        note: "現在進行中の作業を伝えつつ、北米側の状況を聞くフレーズ。",
+        targetSec: 6.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 3,
+        category: "🚀 実践会議セレクト",
+        situation: "合意時期の探り",
+        english: "Just out of curiosity, when do you think we can reach an agreement on the compliance matrix?",
+        ipa: "/dʒʌst‿ˈaʊɾ‿ə(v) ˌkjʊriˈɑːsəɾi | ˈwɛn də jə ˈθɪŋk wi kən ˈriːtʃ‿ən‿əˈɡriːmən(t)‿ɑːn ðə kəmˈplaɪəns ˈmeɪtrɪks/",
+        pronNote: "out ofはフラップ化＋脱落で /ˈaʊɾ‿ə/（アウラ）。do youは /də jə/ に弱化。",
+        japanese: "単なる好奇心から（参考までにお聞きします）が、コンプライアンスマトリックスについてはいつ合意に達することができると思いますか？",
+        sourceRef: "ATSU がよく使う表現 20選 Part 3 / 6「just out of curiosity (単なる好奇心から)」",
+        note: "相手に過度なプレッシャーを与えずにスケジュール感を探る時に便利。",
+        targetSec: 5.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 4,
+        category: "🚀 実践会議セレクト",
+        situation: "今後の対応についての議論の提案",
+        english: "I want to have a discussion as to what we need to do in the next couple of weeks regarding the unsolved items.",
+        ipa: "/aɪ ˈwɑːnə ˈhæv‿ə dɪˈskʌʃən ˈæz tə wʌ(t) wi ˈniː(d) tə ˈduː‿ɪn ðə ˈnɛks(t) ˈkʌpəl‿ə(v) ˈwiːks rɪˈɡɑːrdɪŋ ði‿ʌnˈsɑːlvd‿ˈaɪɾəmz/",
+        pronNote: "want to ➔ /ˈwɑːnə/（ワナ）、couple of ➔ /ˈkʌpəl‿ə/（カプラ）、items ➔ /ˈaɪɾəmz/（アイラムズ）。",
+        japanese: "未解決の項目に関して、今後数週間で何をすべきか議論したいです。",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 22「as to (~に関して)」",
+        note: "aboutよりも少しフォーマルに議題を提示できる表現。",
+        targetSec: 5.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 5,
+        category: "🚀 実践会議セレクト",
+        situation: "相手からのざっくりとした感触の確認",
+        english: "What did you think about the customer's feedback in general?",
+        ipa: "/ˈwʌdʒu ˈθɪŋk‿əˈbaʊ(t) ðə ˈkʌstəmərz ˈfiːdbæk‿ɪn ˈdʒɛnərəl/",
+        pronNote: "What did youは同化・弱化して /ˈwʌdʒu/（ワジュ）または /ˈwʌɾɪdʒu/（ワディジュ）。",
+        japanese: "全体的に、顧客のフィードバックについてどう思いましたか？",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 38「in general (全体的に、一般に)」",
+        note: "細かい項目に入る前に、北米担当者の全体的な感触を掴む質問。",
+        targetSec: 3.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 6,
+        category: "🚀 実践会議セレクト",
+        situation: "仕様変更の可能性への言及",
+        english: "The customer might change their requirements, in which case we'll need to update the matrix.",
+        ipa: "/ðə ˈkʌstəmər ˈmaɪ(t) ˈtʃeɪndʒ ðɛr rɪˈkwaɪərmənts | ɪn ˈwɪtʃ ˈkeɪs wɪl ˈniː(d) tu‿ʌpˈdeɪ(t) ðə ˈmeɪtrɪks/",
+        pronNote: "we'llは短く /wɪl/（ウィル）に弱化。need toは /d/ が脱落して /ˈniː(d) tu/。",
+        japanese: "顧客が要求事項を変更するかもしれないから、その場合はマトリックスを更新する必要があります。",
+        sourceRef: "ATSU がよく使う表現 20選 Part 1 / 14「in which case (その場合)」",
+        note: "起こりうるリスクと、その際のアクションを一文でスムーズに繋げる。",
+        targetSec: 4.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 7,
+        category: "🚀 実践会議セレクト",
+        situation: "優先事項のすり合わせ",
+        english: "The first stage is more about understanding the concept rather than finalizing every single detail of the controller.",
+        ipa: "/ðə ˈfɜːrs(t) ˈsteɪdʒ‿ɪz ˈmɔːr‿əˈbaʊɾ‿ˌʌndərˈstændɪŋ ðə ˈkɑːnsɛp(t) ˈræðər ðən ˈfaɪnəlaɪzɪŋ ˈɛvri ˈsɪŋɡəl dɪˈteɪl‿əv ðə kənˈtroʊlər/",
+        pronNote: "more‿about‿understandingがフラップ連結。rather thanのthanは /ðən/ に弱化。",
+        japanese: "最初の段階では、コントローラーのすべての詳細を最終決定するよりも、むしろ概念を理解する方が重要です。",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 31「more about (~の方がもっと重要だ)」",
+        note: "細部で詰まった時に、今のフェーズで優先すべきことを明確にする。",
+        targetSec: 6.0, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 8,
+        category: "🚀 実践会議セレクト",
+        situation: "相手の質問への回答と理由説明",
+        english: "Going back to your question, my answer is no. The reason being we don't have the necessary equipment.",
+        ipa: "/ˈɡoʊɪŋ ˈbæk tə jər ˈkwɛstʃən | maɪ‿ˈænsər‿ɪz ˈnoʊ || ðə ˈriːzən ˈbiːɪŋ wi ˈdoʊn(t) ˈhæv ðə ˈnɛsəsɛri‿ɪˈkwɪpmənt/",
+        pronNote: "to yourが /tə jər/ に弱化。don't haveは /t/ が落ちて /ˈdoʊn(t) ˈhæv/。",
+        japanese: "さっきの君の質問に戻ると、答えはノー（対応不可）です。理由は、必要な設備がないからです。",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 29「going back to」＆ 21「the reason being」",
+        note: "話題を引き戻すチャンクと、理由を端的に添えるチャンクのコンボ。",
+        targetSec: 5.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 9,
+        category: "🚀 実践会議セレクト",
+        situation: "顧客の意向に基づいた判断",
+        english: "Are they satisfied with the current matrix? If that's the case, we don't have to change anything.",
+        ipa: "/ər ðeɪ ˈsæɾɪsfaɪd wɪ(θ) ðə ˈkɜːrən(t) ˈmeɪtrɪks || ɪf ˈðæts ðə ˈkeɪs | wi ˈdoʊn(t) ˈhæf tə ˈtʃeɪndʒ ˈɛniθɪŋ/",
+        pronNote: "文頭のAreは /ər/ に弱化。satisfiedはフラップTで /ˈsæɾɪsfaɪd/。have toは /ˈhæf tə/（ハフタ）。",
+        japanese: "彼らは現在のマトリックスに満足していますか？もしそうなら、私たちは何も変更する必要はありません。",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 40「if that's the case (もしそうなら)」",
+        note: "相手の確認結果を受けて結論をシンプルに導く表現。",
+        targetSec: 4.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      },
+      {
+        id: 10,
+        category: "🚀 実践会議セレクト",
+        situation: "議論の停滞を打破する",
+        english: "Let's get straight to the point. What's the main bottleneck in finalizing this specification?",
+        ipa: "/lɛts ˈɡɛ(t) ˈstreɪ(t) tə ðə ˈpɔɪnt || ˈwʌts ðə ˈmeɪn ˈbɑːɾəlnɛk‿ɪn ˈfaɪnəlaɪzɪŋ ðɪs ˌspɛsəfəˈkeɪʃən/",
+        pronNote: "get straight toの/t/が連続で省略・同化。bottleneckは米音フラップTで /ˈbɑːɾəlnɛk/（バロルネック）。",
+        japanese: "もう端的に要点を言いましょう。この仕様を最終決定する上での主なボトルネックは何ですか？",
+        sourceRef: "ATSU がよく使う表現 20選 Part 2 / 35「get to the point (要点を言う)」",
+        note: "時間が限られた会議で、核心（合意できない原因）に迫る一言。",
+        targetSec: 4.5, bestTime: null, lastTime: null, reps: 0, mastered: false
+      }
+    ];
+
+    function normalizeCategoryName(cat) {
+      if (cat === 'beginner_1_10') return '🌱 初級編 01〜10';
+      if (cat === 'practical_10') return '🚀 実践会議セレクト';
+      return cat || '🌱 初級編 01〜10';
+    }
+
+    function loadPhrases() {
+      const saved = JSON.parse(localStorage.getItem('speaking_matrix_phrases'));
+      if (!saved) return builtInPhrases;
+
+      const merged = [...builtInPhrases];
+      merged.forEach((item, idx) => {
+        const found = saved.find(s => s.id === item.id);
+        if (found) {
+          merged[idx] = {
+            ...item,
+            bestTime: found.bestTime,
+            lastTime: found.lastTime,
+            reps: found.reps,
+            mastered: found.mastered
+          };
+        }
+      });
+      saved.forEach(s => {
+        if (!merged.some(m => m.id === s.id)) {
+          merged.push({ ...s, category: normalizeCategoryName(s.category) });
+        }
+      });
+      return merged;
+    }
+
+    let phrases = loadPhrases();
+    let currentCategory = '🌱 初級編 01〜10';
+    let currentFilter = 'all';
+    let isBlindMode = false;
+
+    let activeTimerId = null;
+    let timerStartTime = 0;
+    let timerInterval = null;
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedBlobs = {};
+
+    let availableVoices = [];
+    let speechRate = 1.0;
+    let activeSpeakingId = null;
+
+    function initVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const allVoices = window.speechSynthesis.getVoices();
+      if (allVoices.length === 0) return;
+
+      const enVoices = allVoices.filter(v => v.lang.startsWith('en'));
+      enVoices.sort((a, b) => {
+        const score = (v) => {
+          let s = 0;
+          if (v.lang === 'en-US' || v.lang === 'en_US') s += 50;
+          if (v.name.includes('Natural') || v.name.includes('Online')) s += 30;
+          if (v.name.includes('Google US English')) s += 25;
+          if (v.name.includes('Samantha') || v.name.includes('Alex') || v.name.includes('Ava') || v.name.includes('Guy') || v.name.includes('Aria') || v.name.includes('Jenny')) s += 20;
+          return s;
+        };
+        return score(b) - score(a);
+      });
+
+      availableVoices = enVoices;
+      const select = document.getElementById('voiceSelect');
+      select.innerHTML = '';
+
+      if (enVoices.length === 0) {
+        select.innerHTML = '<option value="">標準英語ボイス (en-US)</option>';
+        return;
+      }
+
+      const savedVoiceName = localStorage.getItem('speaking_matrix_voice');
+      enVoices.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.name;
+        const isUS = v.lang === 'en-US' || v.lang === 'en_US';
+        option.textContent = `${isUS ? '🇺🇸 ' : '🌐 '}${v.name} (${v.lang})`;
+        if (savedVoiceName && v.name === savedVoiceName) option.selected = true;
+        select.appendChild(option);
+      });
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = initVoices;
+      setTimeout(initVoices, 200);
+    }
+
+    function saveVoicePreference() {
+      localStorage.setItem('speaking_matrix_voice', document.getElementById('voiceSelect').value);
+    }
+
+    function setSpeechRate(rate) {
+      speechRate = rate;
+      [0.8, 1, 1.15].forEach(r => {
+        const btn = document.getElementById(`rate-${r}`);
+        if (!btn) return;
+        btn.className = r === rate
+          ? "px-2 py-0.5 text-[11px] rounded font-bold bg-cyan-600 text-white transition"
+          : "px-2 py-0.5 text-[11px] rounded font-bold text-slate-400 hover:text-white transition";
+      });
+    }
+
+    function saveData() {
+      localStorage.setItem('speaking_matrix_phrases', JSON.stringify(phrases));
+      updateStats();
+      renderCategoryTabs();
+    }
+
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabs');
+      const categories = [...new Set(phrases.map(p => p.category))];
+      container.innerHTML = '';
+
+      categories.forEach(cat => {
+        const count = phrases.filter(p => p.category === cat).length;
+        const active = currentCategory === cat;
+        const btn = document.createElement('button');
+        btn.onclick = () => setCategory(cat);
+        btn.className = active
+          ? "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition"
+          : "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition";
+        btn.textContent = `${cat} (${count})`;
+        container.appendChild(btn);
+      });
+
+      const allBtn = document.createElement('button');
+      allBtn.onclick = () => setCategory('all');
+      allBtn.className = currentCategory === 'all'
+        ? "px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white transition"
+        : "px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition";
+      allBtn.textContent = `📚 全表示 (${phrases.length})`;
+      container.appendChild(allBtn);
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      renderCategoryTabs();
+      renderCards();
+    }
+
+    function updateStats() {
+      const total = phrases.length;
+      const masteredCount = phrases.filter(p => p.mastered).length;
+      const totalReps = phrases.reduce((sum, p) => sum + p.reps, 0);
+      const pct = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+
+      document.getElementById('progressText').textContent = `${masteredCount} / ${total} (${pct}%)`;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      document.getElementById('totalReps').textContent = totalReps;
+
+      const recorded = phrases.filter(p => p.bestTime !== null);
+      if (recorded.length > 0) {
+        const avg = recorded.reduce((sum, p) => sum + p.bestTime, 0) / recorded.length;
+        document.getElementById('avgBestTime').textContent = avg.toFixed(2);
+      } else {
+        document.getElementById('avgBestTime').textContent = '--';
+      }
+
+      const exp = totalReps + (masteredCount * 5);
+      const lv = Math.floor(exp / 5) + 1;
+      document.getElementById('playerLv').textContent = `Lv.${lv}`;
+
+      let title = "見習い交渉人";
+      if (lv >= 3) title = "チャンク使いの担当者";
+      if (lv >= 6) title = "北米会議の牽引役";
+      if (lv >= 10) title = "高速引き出しマスター";
+      if (lv >= 15) title = "スピーキングモンスター";
+      document.getElementById('playerTitle').textContent = title;
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cardsContainer');
+      container.innerHTML = '';
+
+      const filtered = phrases.filter(p => {
+        if (currentCategory !== 'all' && p.category !== currentCategory) return false;
+        if (currentFilter === 'mastered') return p.mastered;
+        if (currentFilter === 'unmastered') return !p.mastered;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 bg-slate-800/40 rounded-2xl border border-slate-800 text-slate-400">該当するフレーズがありません。</div>`;
+        return;
+      }
+
+      filtered.forEach((item, index) => {
+        const isTimingThis = activeTimerId === item.id;
+        const isSpeakingThis = activeSpeakingId === item.id;
+        const isFastEnough = item.bestTime !== null && item.bestTime <= item.targetSec;
+        const hasMyAudio = !!recordedBlobs[item.id];
+
+        let dotsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          const filled = item.reps >= i;
+          dotsHtml += `<span class="w-2.5 h-2.5 rounded-full ${filled ? 'bg-orange-400 shadow-sm shadow-orange-400/50' : 'bg-slate-700'}"></span>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = `rounded-2xl border transition-all p-5 ${
+          item.mastered ? 'bg-emerald-950/20 border-emerald-700/50' : 'bg-slate-800/90 border-slate-700 hover:border-slate-600'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex-1 space-y-2.5">
+              <div class="flex flex-wrap items-center gap-2">
+                <button onclick="toggleMastered(${item.id})" class="flex items-center gap-2 text-left group">
+                  <div class="w-6 h-6 rounded-md flex items-center justify-center border transition ${
+                    item.mastered ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'bg-slate-900 border-slate-600 text-transparent group-hover:border-indigo-400'
+                  }">
+                    <i class="fa-solid fa-check text-xs"></i>
+                  </div>
+                  <span class="text-xs font-extrabold px-2 py-0.5 rounded bg-slate-700 text-slate-200">#${index + 1}</span>
+                  <h3 class="font-bold text-base ${item.mastered ? 'text-emerald-300 line-through decoration-emerald-500/50' : 'text-white'}">
+                    ${item.situation}
+                  </h3>
+                </button>
+                <span class="text-[11px] bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-2.5 py-0.5 rounded-md">
+                  <i class="fa-solid fa-book-open mr-1"></i>${item.sourceRef}
+                </span>
+              </div>
+
+              <div class="relative bg-slate-900/90 border ${isSpeakingThis ? 'border-cyan-500/80' : 'border-slate-800'} rounded-xl p-3.5 transition">
+                <p id="eng-${item.id}" class="text-lg font-bold tracking-wide text-amber-50 leading-snug ${isBlindMode ? 'blur-text' : ''}">
+                  "${item.english}"
+                </p>
+
+                ${item.ipa ? `
+                  <div class="mt-2 bg-slate-950/90 border border-cyan-900/60 rounded-lg px-3 py-2 ${isBlindMode ? 'blur-text' : ''}">
+                    <p class="text-xs sm:text-sm text-cyan-300 font-medium ipa-font tracking-wide">${item.ipa}</p>${item.pronNote ? `<p class="text-[11px] text-cyan-100/80 mt-1"><i class="fa-solid fa-wave-square text-cyan-400 mr-1"></i><strong>発音変化:</strong> ${item.pronNote}</p>` : ''}
+                  </div>
+                ` : ''}
+
+                <p class="text-xs text-slate-300 mt-2.5">🇯🇵 ${item.japanese}</p>
+                ${item.note ? `<p class="text-[11px] text-slate-400 mt-1"><i class="fa-regular fa-lightbulb text-amber-400 mr-1"></i>${item.note}</p>` : ''}
+
+                <div class="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/80">
+                  <button onclick="speakEnglish(${item.id}, false)" class="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                    isSpeakingThis ? 'bg-cyan-500 text-slate-950 pulse-speaking' : 'bg-cyan-950/80 hover:bg-cyan-900 text-cyan-300 border border-cyan-800/70'
+                  }">
+                    <i class="fa-solid ${isSpeakingThis ? 'fa-stop' : 'fa-volume-high'}"></i>
+                    <span>${isSpeakingThis ? 'お手本再生中...' : '🇺🇸 お手本を聞く'}</span>
+                  </button>
+
+                  <button onclick="speakEnglish(${item.id}, true)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-headphones"></i>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    <i class="fa-solid fa-microphone"></i>
+                    <span>お手本 ➔ すぐ計測</span>
+                  </button>
+
+                  ${hasMyAudio ? `
+                    <button onclick="playMyVoice(${item.id})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 flex items-center gap-1.5 transition">
+                      <i class="fa-solid fa-play"></i>
+                      <span>自分の声を聞く</span>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-slate-900/70 p-3.5 rounded-xl border border-slate-800 min-w-[230px]">
+              <div class="text-center w-full">
+                <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1 px-1">
+                  <span>目標: ${item.targetSec.toFixed(1)}秒</span>
+                  <span>ベスト: <strong class="${isFastEnough ? 'text-emerald-400' : 'text-cyan-400'}">${item.bestTime !== null ? item.bestTime.toFixed(2) + '秒' : '--'}</strong></span>
+                </div>
+                <div id="timer-display-${item.id}" class="font-mono text-2xl font-extrabold py-1 rounded-lg bg-slate-950 border border-slate-800 ${isTimingThis ? 'text-rose-400' : 'text-white'}">
+                  ${item.lastTime !== null ? item.lastTime.toFixed(2) : '0.00'}<span class="text-xs font-normal text-slate-400 ml-1">sec</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 w-full">
+                <button onclick="toggleStopwatch(${item.id})" class="flex-1 py-2 px-3 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition ${
+                  isTimingThis ? 'bg-rose-600 hover:bg-rose-500 text-white pulse-recording' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                }">
+                  <i class="fa-solid ${isTimingThis ? 'fa-stop' : 'fa-microphone'}"></i>
+                  <span>${isTimingThis ? 'ストップ' : '計測スタート'}</span>
+                </button>
+                <button onclick="deletePhrase(${item.id})" title="削除" class="p-2 rounded-lg bg-slate-800 hover:bg-rose-950 hover:text-rose-400 text-slate-500 border border-slate-700 transition">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between w-full pt-1 border-t border-slate-800/80 text-[11px]">
+                <span class="text-slate-400">反復: <strong class="text-white">${item.reps}</strong>回</span>
+                <div class="flex items-center gap-1">${dotsHtml}</div>
+              </div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function speakEnglish(id, autoStartTimerAfter = false) {
+      if (!('speechSynthesis' in window)) return;
+      if (activeSpeakingId === id) {
+        window.speechSynthesis.cancel();
+        activeSpeakingId = null;
+        renderCards();
+        return;
+      }
+      if (activeTimerId !== null) stopStopwatch(activeTimerId);
+      window.speechSynthesis.cancel();
+
+      const phrase = phrases.find(p => p.id === id);
+      if (!phrase) return;
+
+      activeSpeakingId = id;
+      renderCards();
+
+      const utter = new SpeechSynthesisUtterance(phrase.english);
+      utter.lang = 'en-US';
+      utter.rate = speechRate;
+
+      const selectedVoiceName = document.getElementById('voiceSelect').value;
+      const chosenVoice = availableVoices.find(v => v.name === selectedVoiceName) || availableVoices[0];
+      if (chosenVoice) utter.voice = chosenVoice;
+
+      utter.onboundary = (event) => {
+        if (event.name === 'word') {
+          const engEl = document.getElementById(`eng-${id}`);
+          if (!engEl) return;
+          const text = phrase.english;
+          const start = event.charIndex;
+          let end = text.indexOf(' ', start);
+          if (end === -1) end = text.length;
+          engEl.innerHTML = `"${text.slice(0, start)}<span class="word-highlight">${text.slice(start, end)}</span>${text.slice(end)}"`;
+        }
+      };
+
+      utter.onend = () => {
+        activeSpeakingId = null;
+        renderCards();
+        if (autoStartTimerAfter) startStopwatch(id);
+      };
+      utter.onerror = () => {
+        activeSpeakingId = null;
+        renderCards();
+      };
+      window.speechSynthesis.speak(utter);
+    }
+
+    async function startStopwatch(id) {
+      activeTimerId = id;
+      timerStartTime = performance.now();
+      renderCards();
+
+      if (document.getElementById('recordToggle').checked && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            recordedBlobs[id] = URL.createObjectURL(blob);
+            stream.getTracks().forEach(t => t.stop());
+            renderCards();
+          };
+          mediaRecorder.start();
+        } catch (err) {
+          console.warn('Mic access skipped:', err);
+        }
+      }
+
+      const displayEl = document.getElementById(`timer-display-${id}`);
+      timerInterval = setInterval(() => {
+        const elapsed = (performance.now() - timerStartTime) / 1000;
+        if (displayEl) {
+          displayEl.innerHTML = `${elapsed.toFixed(2)}<span class="text-xs font-normal text-slate-400 ml-1">sec</span>`;
+        }
+      }, 30);
+    }
+
+    function stopStopwatch(id) {
+      clearInterval(timerInterval);
+      const elapsed = Number(((performance.now() - timerStartTime) / 1000).toFixed(2));
+      activeTimerId = null;
+
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+
+      const phrase = phrases.find(p => p.id === id);
+      if (phrase && elapsed > 0.3) {
+        phrase.lastTime = elapsed;
+        phrase.reps += 1;
+        if (phrase.bestTime === null || elapsed < phrase.bestTime) {
+          phrase.bestTime = elapsed;
+        }
+        saveData();
+      }
+      renderCards();
+    }
+
+    function toggleStopwatch(id) {
+      if (activeSpeakingId !== null) {
+        window.speechSynthesis.cancel();
+        activeSpeakingId = null;
+      }
+      if (activeTimerId !== null && activeTimerId !== id) stopStopwatch(activeTimerId);
+      if (activeTimerId === id) stopStopwatch(id);
+      else startStopwatch(id);
+    }
+
+    function playMyVoice(id) {
+      if (!recordedBlobs[id]) return;
+      const audio = new Audio(recordedBlobs[id]);
+      audio.play();
+    }
+
+    function toggleMastered(id) {
+      const phrase = phrases.find(p => p.id === id);
+      if (phrase) {
+        phrase.mastered = !phrase.mastered;
+        saveData();
+        renderCards();
+      }
+    }
+
+    function toggleBlindMode() {
+      isBlindMode = !isBlindMode;
+      const btn = document.getElementById('blindBtn');
+      btn.className = isBlindMode
+        ? "bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5"
+        : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium px-3 py-2 rounded-lg transition flex items-center gap-1.5";
+      btn.innerHTML = isBlindMode ? '<i class="fa-regular fa-eye"></i><span>英文を表示</span>' : '<i class="fa-regular fa-eye-slash"></i><span>英文を隠す</span>';
+      renderCards();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      ['all', 'unmastered', 'mastered'].forEach(f => {
+        const el = document.getElementById(`tab-${f}`);
+        el.className = f === filter
+          ? "px-2.5 py-1 rounded text-xs font-bold bg-indigo-600 text-white transition"
+          : "px-2.5 py-1 rounded text-xs font-bold text-slate-300 hover:text-white transition";
+      });
+      renderCards();
+    }
+
+    function openBulkModal() {
+      document.getElementById('bulkModal').classList.remove('hidden');
+      document.getElementById('bulkModal').classList.add('flex');
+    }
+    function closeBulkModal() {
+      document.getElementById('bulkModal').classList.add('hidden');
+      document.getElementById('bulkModal').classList.remove('flex');
+    }
+
+    function importBulkJson() {
+      const raw = document.getElementById('bulkJsonInput').value.trim();
+      if (!raw) return alert('データを貼り付けてください。');
+      try {
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) throw new Error('配列形式ではありません');
+        let addedCount = 0;
+        let lastCat = currentCategory;
+        items.forEach((item, idx) => {
+          if (!item.english) return;
+          const exists = phrases.some(p => p.english === item.english);
+          if (!exists) {
+            const cat = item.category || '🌱 追加フレーズ';
+            lastCat = cat;
+            phrases.push({
+              id: item.id || (Date.now() + idx),
+              category: cat,
+              situation: item.situation || '会議フレーズ',
+              english: item.english,
+              ipa: item.ipa || '',
+              pronNote: item.pronNote || '',
+              japanese: item.japanese || '',
+              sourceRef: item.sourceRef || '',
+              note: item.note || '',
+              targetSec: Number(item.targetSec) || 4.0,
+              bestTime: null, lastTime: null, reps: 0, mastered: false
+            });
+            addedCount++;
+          }
+        });
+        currentCategory = lastCat;
+        saveData();
+        renderCards();
+        document.getElementById('bulkJsonInput').value = '';
+        closeBulkModal();
+        alert(`🎉 発音記号付きで ${addedCount} 個の新しい構文フレーズを追加しました！`);
+      } catch (e) {
+        alert('データの形式が正しくありません。チャットで出力されたJSONコードをそのまま貼り付けてください。');
+      }
+    }
+
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(phrases, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", "speaking_matrix_backup.json");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function openComboModal() {
+      document.getElementById('comboModal').classList.remove('hidden');
+      document.getElementById('comboModal').classList.add('flex');
+      generateCombo();
+    }
+    function closeComboModal() {
+      document.getElementById('comboModal').classList.add('hidden');
+      document.getElementById('comboModal').classList.remove('flex');
+    }
+    function generateCombo() {
+      if (phrases.length < 2) return;
+      const shuffled = [...phrases].sort(() => 0.5 - Math.random());
+      const p1 = shuffled[0];
+      const p2 = shuffled[1];
+      document.getElementById('comboContent').innerHTML = `
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5">
+          <span class="text-[10px] font-bold text-amber-400">引き出し ① (${p1.sourceRef})</span>
+          <p class="text-base font-bold text-white mt-1">"${p1.english}"</p>
+          ${p1.ipa ? `<p class="text-xs text-cyan-300 ipa-font mt-1">${p1.ipa}</p>` : ''}
+          <p class="text-xs text-slate-400 mt-1">${p1.japanese}</p>
+        </div>
+        <div class="text-center text-amber-400 font-bold text-xs"><i class="fa-solid fa-plus"></i> 繋げて一気に発話！</div>
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5">
+          <span class="text-[10px] font-bold text-cyan-400">引き出し ② (${p2.sourceRef})</span>
+          <p class="text-base font-bold text-white mt-1">"${p2.english}"</p>
+          ${p2.ipa ? `<p class="text-xs text-cyan-300 ipa-font mt-1">${p2.ipa}</p>` : ''}
+          <p class="text-xs text-slate-400 mt-1">${p2.japanese}</p>
+        </div>
+      `;
+    }
+
+    function openModal() {
+      document.getElementById('inputCategory').value = currentCategory === 'all' ? '🌱 初級編 01〜10' : currentCategory;
+      document.getElementById('addModal').classList.remove('hidden');
+      document.getElementById('addModal').classList.add('flex');
+    }
+    function closeModal() {
+      document.getElementById('addModal').classList.add('hidden');
+      document.getElementById('addModal').classList.remove('flex');
+      document.getElementById('addForm').reset();
+    }
+    function addNewPhrase(e) {
+      e.preventDefault();
+      const cat = document.getElementById('inputCategory').value.trim();
+      phrases.push({
+        id: Date.now(),
+        category: cat,
+        situation: document.getElementById('inputSituation').value.trim(),
+        english: document.getElementById('inputEnglish').value.trim(),
+        ipa: document.getElementById('inputIpa').value.trim(),
+        pronNote: document.getElementById('inputPronNote').value.trim(),
+        japanese: document.getElementById('inputJapanese').value.trim(),
+        sourceRef: document.getElementById('inputSource').value.trim(),
+        targetSec: parseFloat(document.getElementById('inputTargetSec').value) || 4.0,
+        note: document.getElementById('inputNote').value.trim(),
+        bestTime: null, lastTime: null, reps: 0, mastered: false
+      });
+      currentCategory = cat;
+      saveData();
+      renderCards();
+      closeModal();
+    }
+
+    function deletePhrase(id) {
+      if (!confirm('このフレーズをリストから削除しますか？')) return;
+      phrases = phrases.filter(p => p.id !== id);
+      saveData();
+      renderCards();
+    }
+
+    saveData();
+    renderCards();
+  </script>
+</body>
+</html>
